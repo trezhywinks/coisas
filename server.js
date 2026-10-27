@@ -35,6 +35,7 @@ function transmitirUsuarios() {
   // Não incluir o IP completo na lista pública.
   const listaPublica = Array.from(usuarios.values()).map(usuario => ({
     nome: usuario.nome,
+    ip: usuario.ip,
     cidade: usuario.cidade,
     regiao: usuario.regiao,
     pais: usuario.pais
