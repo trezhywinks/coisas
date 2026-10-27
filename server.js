@@ -34,22 +34,42 @@ function obterIP(req) {
   return ip;
 }
 
-async function obterCidade(ip) {
+async function obterCidade(ip) { 
+  //async function  (ip) {
   try {
+    if (
+      ip === "::1" ||
+      ip === "127.0.0.1" ||
+      ip.startsWith("192.168.") ||
+      ip.startsWith("10.")
+    ) {
+      return {
+        cidade: "Local desconhecido",
+        regiao: "Local desconhecido",
+        pais: "Local desconhecido"
+      };
+    }
     const resposta = await fetch(
       "https://ipapi.co/" + encodeURIComponent(ip) + "/json/"
     );
-
-    if (!resposta.ok) return "Não identificada";
-
+    if (!resposta.ok) {
+      throw new Error("Falha na consulta de localização");
+    }
     const dados = await resposta.json();
-
-    return dados.city || "Não identificada";
-  } catch {
-    return "Não identificada";
+    return {
+      cidade: dados.city || "Não identificada",
+      regiao: dados.region || "Não identificada",
+      pais: dados.country_name || "Não identificado"
+    };
+  } catch (erro) {
+    console.error("Erro ao obter localização:", erro.message);
+    return {
+      cidade: "Não identificada",
+      regiao: "Não identificada",
+      pais: "Não identificado"
+    };
   }
 }
-
 function transmitirUsuarios() {
   const dados = JSON.stringify({
     tipo: "listaUsuarios",
@@ -95,11 +115,19 @@ wss.on("connection", (socket, req) => {
       const cidade = await obterCidade(ip);
 
       const usuario = {
-        nome,
-        ip,
-        cidade
-      };
 
+  nome,
+
+  ip,
+
+  cidade: cidade.cidade,
+
+  regiao: cidade.regiao,
+
+  pais: cidade.pais
+
+};
+      
       usuarios.set(id, usuario);
       socket.usuarioId = id;
 
