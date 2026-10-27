@@ -17,12 +17,20 @@ const wss = new WebSocket.Server({ server });
 const usuarios = new Map();
 
 function obterIP(req) {
-  let ip = req.socket.remoteAddress || "";
-
-  if (ip.startsWith("::ffff:")) {
-    ip = ip.replace("::ffff:", "");
+  const ipRender = req.headers["true-client-ip"];
+  if (process.env.RENDER && ipRender) {
+    return ipRender.trim();
   }
 
+  const encaminhado = req.headers["x-forwarded-for"];
+  if (encaminhado) {
+    return encaminhado.split(",")[0].trim();
+  }
+
+  let ip = req.socket.remoteAddress || "";
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.substring(7);
+  }
   return ip;
 }
 
